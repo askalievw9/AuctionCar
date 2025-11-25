@@ -4,16 +4,18 @@ services:
 
   web:
     build: .
-    command:
-      - bash -c "uvicorn main:auction_car -host 0.0.0.0 --port 8000"
+    command: >
+      bash -c "./manage.py collectstatic --noinput && ./manage.py makemigrations && ./manage.py migrate && gunicorn -b 0.0.0.0:8000 auction_car.wsgi:application"
     volumes:
-      - .:/auction_car
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
     ports:
       - "8000:8000"
     depends_on:
-      - db_sql
+      - db
 
-  db_sql:
+  db:
     image: postgres:latest
     restart: always
     environment:
@@ -30,6 +32,10 @@ services:
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
+    depends_on:
+      - web
 
 volumes:
   postgres_data:
+  static_volume:
+  media_volume:
